@@ -38,12 +38,11 @@ func (s *Score) FillScore(address std.Address, problemId, score int, tests, hash
 
 func (s *Score) ReadScore() string {
 	var output string
-	output += ufmt.Sprintf(`"ProblemId":"%s",`, s.ProblemId)
+	output += ufmt.Sprintf(`"{ProblemId":"%s",`, s.ProblemId)
 	output += ufmt.Sprintf(`"Score":"%s",`, s.Score)
 	output += ufmt.Sprintf(`"Tests":"%s",`, s.Tests)
 	output += ufmt.Sprintf(`"Hash":"%s",`, s.Hash)
-	output += ufmt.Sprintf(`"Address":"%s"`, s.Address)
-	output = "{" + output + "}"
+	output += ufmt.Sprintf(`"Address":"%s}"`, s.Address)
 	return output
 }
 
@@ -55,6 +54,7 @@ func ReadScores(tree avl.Tree) string {
 		json += ufmt.Sprintf(`"%s":"%s",`, network, score)
 		return false
 	})
+	json = json[0 : len(json)-1]
 	json += "}"
 	return json
 }

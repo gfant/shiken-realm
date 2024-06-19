@@ -29,6 +29,7 @@ func init() {
 	creator := std.GetOrigCaller()
 	owner = creator
 	DAOsize = 1
+	ProblemId = 1
 	DAO = avl.Tree{}
 	DAO.Set(creator.String(), true)
 }
@@ -47,6 +48,7 @@ func AddNewProblem(title, statement, examples string) {
 	Problems.Set(id, newProblem)
 	// For later purposes
 	Leaderboards.Set(id, new(avl.Tree))
+	ProblemId++
 }
 
 // Adding score of an user
@@ -73,6 +75,22 @@ func RenderScores(id int) string {
 	}
 	lb := lbInterface.(avl.Tree)
 	output := shiken_support.ReadScores(lb)
+	return output
+}
+
+func RenderProblems() string {
+	output := shiken_support.ReadProblems(Problems)
+	return output
+}
+
+func RenderProblem(problemId int) string {
+	idString := strconv.Itoa(problemId)
+	problemInterface, ok := Problems.Get(idString)
+	if !ok {
+		panic(ErrNoProblemId)
+	}
+	problem := problemInterface.(*shiken_support.Problem)
+	output := problem.ReadProblem()
 	return output
 }
 
