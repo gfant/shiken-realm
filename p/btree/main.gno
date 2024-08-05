@@ -13,13 +13,29 @@ type BTreeNode struct {
 	keys     []int        // keys in node
 	children []*BTreeNode // pointers to children
 	leaf     bool         // Node is leaf or not
-	n        int          // size of stored vals in node
+	n        int          // amount of stored vals in node
 }
 
 type BTree struct {
 	root *BTreeNode
 	t    int // min grade
 }
+
+/*
+func main() {
+	tree := NewBTree(3)
+
+	tree.Insert(3)
+	tree.Insert(15)
+	tree.Insert(10)
+	tree.Insert(11)
+   	tree.Insert(40)
+
+	   tree.InOrderTraversal()
+	   ufmt.Println(tree.GetSmallest())
+	   ufmt.Println(tree.GetGreatest())
+}
+*/
 
 // Create new B-tree
 func NewBTree(t int) *BTree {
@@ -284,7 +300,6 @@ func (bt *BTree) InOrderTraversal() {
 func inOrderTraversal(node *BTreeNode) {
 	i := 0
 	// Recorrer cada hijo y su subárbol izquierdo
-	nodeVal := ""
 	for i < node.n {
 		if !node.leaf {
 			inOrderTraversal(node.children[i])
@@ -299,4 +314,50 @@ func inOrderTraversal(node *BTreeNode) {
 	if !node.leaf {
 		inOrderTraversal(node.children[i])
 	}
+}
+
+func (bt *BTree) GetSmallest() int {
+	if bt.root != nil {
+		return getSmallest(bt.root)
+	} else {
+		return 0
+	}
+}
+
+func getSmallest(node *BTreeNode) int {
+	i := 0
+	var val int
+	if !node.leaf {
+		val = getSmallest(node.children[i])
+	} else {
+		if node.n > 0 {
+			val = node.keys[i]
+		} else {
+			val = -1
+		}
+	}
+	return val
+}
+
+func (bt *BTree) GetGreatest() int {
+	if bt.root != nil {
+		return getGreatest(bt.root)
+	} else {
+		return 0
+	}
+}
+
+func getGreatest(node *BTreeNode) int {
+	i := node.n - 1
+	var val int
+	if !node.leaf {
+		val = getGreatest(node.children[i])
+	} else {
+		if node.n > 0 {
+			val = node.keys[i]
+		} else {
+			val = -1
+		}
+	}
+	return val
 }
