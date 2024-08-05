@@ -2,6 +2,9 @@ package shiken
 
 import (
 	"std"
+	"strconv"
+
+	btree "gno.land/p/dev/btree"
 )
 
 func verifyDAO(caller std.Address) bool {
@@ -12,6 +15,16 @@ func verifyDAO(caller std.Address) bool {
 	return true
 }
 
-func newBestScore(score int) bool {
-	return true
+func newBestScore(score, problemId int) bool {
+	treeInterface, ok := leaderboards.Get(strconv.Itoa(problemId))
+	if !ok {
+		panic(ErrNoProblemId)
+	}
+	tree := treeInterface.(*btree.BTree)
+	worst := tree.GetSmallest()
+	if worst.Key > score {
+		return true
+	} else {
+		return false
+	}
 }
