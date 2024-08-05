@@ -4,8 +4,7 @@ import (
 	"std"
 	"strconv"
 
-	avl "gno.land/p/demo/avl"
-
+	btree "gno.land/p/dev/btree"
 	shiken_support "gno.land/p/dev/shiken_support"
 )
 
@@ -18,33 +17,30 @@ func AddNewProblem(title, statement, examples string) {
 	id := strconv.Itoa(ProblemId)
 	Problems.Set(id, newProblem)
 	// For later purposes
-	leaderboards.Set(id, new(avl.Tree))
+	leaderboards.Set(id, btree.NewBTree(3))
 	ProblemId++
 }
 
 // Adding score of an user
-func AddNewScore(address std.Address, problemId int, score, tests string) {
+func AddNewScore(address std.Address, problemId, score int, tests string) {
 	// Generating score record
-	newScore := new(shiken_support.Score)
+	newScore := shiken_support.Score{}
 	newScore.FillScore(address, problemId, score, tests)
 
 	// Getting the leaderboard for problem
 	problemIdString := strconv.Itoa(problemId)
-	scoresInterface, ok := leaderboards.Get(problemIdString)
+	bTreeInterface, ok := leaderboards.Get(problemIdString)
 	if !ok {
 		panic(ErrNoProblemId)
 	}
-	scores := scoresInterface.(*avl.Tree)
-
+	bTreeScores := bTreeInterface.(*btree.BTree)
 	// Generating id for score
-	scoreInt, err := strconv.Atoi(score)
-	if err != nil {
-		panic(err)
-	}
-	scoreIntId := scoreInt*LeaderboardFactor + updaterCounter
-	scoreId := strconv.Itoa(scoreIntId)
+	scoreIntId := score*LeaderboardFactor + updaterCounter
 
-	// Setting the score
-	scores.Set(scoreId, newScore)
-	leaderboards.Set(problemIdString, scores)
+	// Setting the score only if it's better than the worst score
+	if newBestScore(scoreIntId, problemId) {
+		newScore.AddKey(scoreIntId)                    // Adding key to order in the tree
+		bTreeScores.Insert(newScore)                   // Adding the score into the tree
+		leaderboards.Set(problemIdString, bTreeScores) // Returning the tree into the leaderboard avl.tree
+	}
 }

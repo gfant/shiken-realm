@@ -8,7 +8,7 @@ import (
 
 var (
 	Problems             avl.Tree    // Id -> Problem
-	leaderboards         avl.Tree    // Id -> Avl.Tree{Score -> ScoreData}
+	leaderboards         avl.Tree    // Id -> Btree{Key -> ScoreData}
 	invertedLeaderboards avl.Tree    // Id -> Avl.Tree{Address -> Score}
 	updaterCounter       int         // Counter to update the attempts in leaderboards
 	Account              avl.Tree    // Address -> Data
