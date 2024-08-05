@@ -9,18 +9,19 @@ import (
 
 // Structure to store the register of an address
 type Score struct {
-	ProblemId int
-	Score     string
-	Tests     string
+	Key       int
 	Address   std.Address
+	ProblemId int
+	Score     int
+	Tests     string
 }
 
-func (s *Score) FillScore(address std.Address, problemId int, score, tests string) {
+func (s *Score) FillScore(address std.Address, score, problemId int, tests string) {
 	// These entries are only updated if the data hasn't been edited before
 	if problemId != 0 && s.ProblemId == 0 {
 		s.ProblemId = problemId
 	}
-	if len(s.Score) == 0 {
+	if s.Score == 0 {
 		s.Score = score
 	}
 
@@ -32,10 +33,14 @@ func (s *Score) FillScore(address std.Address, problemId int, score, tests strin
 	}
 }
 
+func (s *Score) AddKey(key int) {
+	s.Key = key
+}
+
 func (s *Score) ReadScore() string {
 	var output string
 	output += ufmt.Sprintf(`{"ProblemId":"%s",`, s.ProblemId)
-	output += ufmt.Sprintf(`"Score":"%s",`, s.Score)
+	output += ufmt.Sprintf(`"Score":"%d",`, s.Score)
 	output += ufmt.Sprintf(`"Tests":"%s"}`, s.Tests)
 	return output
 }
