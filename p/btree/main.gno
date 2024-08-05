@@ -5,12 +5,13 @@ import (
 )
 
 type UserRecord struct {
+	key     int
 	gasUsed int
 	address string
 }
 
 type BTreeNode struct {
-	keys     []int        // keys in node
+	keys     []UserRecord // keys in node
 	children []*BTreeNode // pointers to children
 	leaf     bool         // Node is leaf or not
 	n        int          // amount of stored vals in node
@@ -21,27 +22,26 @@ type BTree struct {
 	t    int // min grade
 }
 
-/*
 func main() {
 	tree := NewBTree(3)
 
-	tree.Insert(3)
-	tree.Insert(15)
-	tree.Insert(10)
-	tree.Insert(11)
-   	tree.Insert(40)
+	tree.Insert(UserRecord{key: 3, address: "11000000023"})
+	tree.Insert(UserRecord{key: 15, address: "12kkkkkk3"})
+	tree.Insert(UserRecord{key: 10, address: "123"})
+	tree.Delete(10)
+	tree.Insert(UserRecord{key: 1, address: "1dsadsadsa"})
+	ufmt.Println(tree.Search(15).address)
 
-	   tree.InOrderTraversal()
-	   ufmt.Println(tree.GetSmallest())
-	   ufmt.Println(tree.GetGreatest())
+	tree.InOrderTraversal()
+	ufmt.Println(tree.GetSmallest().address)
+	ufmt.Println(tree.GetGreatest().address)
 }
-*/
 
 // Create new B-tree
 func NewBTree(t int) *BTree {
 	return &BTree{
 		root: &BTreeNode{
-			keys:     make([]int, 0),        // Create empty array since it's just a new node
+			keys:     make([]UserRecord, 0), // Create empty array since it's just a new node
 			children: make([]*BTreeNode, 0), // Create empty array since no node has been added yet
 			leaf:     true,
 		},
@@ -50,19 +50,19 @@ func NewBTree(t int) *BTree {
 }
 
 // Search in B-tree
-func (bt *BTree) Search(k int) *BTreeNode {
+func (bt *BTree) Search(k int) UserRecord {
 	return search(bt.root, k)
 }
 
-func search(bt *BTreeNode, k int) *BTreeNode {
+func search(bt *BTreeNode, k int) UserRecord {
 	i := 0
-	for i < bt.n && k > bt.keys[i] {
+	for i < bt.n && k > bt.keys[i].key {
 		i++
 	}
-	if i < bt.n && k == bt.keys[i] {
-		return bt
+	if i < bt.n && k == bt.keys[i].key {
+		return bt.keys[i]
 	} else if bt.leaf {
-		return nil
+		return UserRecord{}
 	} else {
 		return search(bt.children[i], k)
 	}
@@ -72,7 +72,7 @@ func (bt *BTree) splitChild(x *BTreeNode, i int) {
 	t := bt.t
 	y := x.children[i]
 	z := &BTreeNode{
-		keys:     make([]int, t-1),
+		keys:     make([]UserRecord, t-1),
 		children: make([]*BTreeNode, 0),
 		leaf:     y.leaf,
 		n:        t - 1,
@@ -89,16 +89,16 @@ func (bt *BTree) splitChild(x *BTreeNode, i int) {
 	y.n = t - 1
 
 	x.children = append(x.children[:i+1], append([]*BTreeNode{z}, x.children[i+1:]...)...)
-	x.keys = append(x.keys[:i], append([]int{y.keys[t-1]}, x.keys[i:]...)...)
+	x.keys = append(x.keys[:i], append([]UserRecord{y.keys[t-1]}, x.keys[i:]...)...)
 	x.n++
 }
 
 // Insert new val
-func (bt *BTree) Insert(k int) {
+func (bt *BTree) Insert(k UserRecord) {
 	root := bt.root
 	if root.n == 2*bt.t-1 {
 		s := &BTreeNode{
-			keys:     make([]int, 0),
+			keys:     make([]UserRecord, 0),
 			children: make([]*BTreeNode, 0),
 			leaf:     false,
 		}
@@ -112,24 +112,24 @@ func (bt *BTree) Insert(k int) {
 }
 
 // Insert if the node isn't full
-func (bt *BTree) insertNonFull(x *BTreeNode, k int) {
+func (bt *BTree) insertNonFull(x *BTreeNode, k UserRecord) {
 	i := x.n - 1
 	if x.leaf {
-		x.keys = append(x.keys, 0)
-		for i >= 0 && k < x.keys[i] {
+		x.keys = append(x.keys, UserRecord{key: 0})
+		for i >= 0 && k.key < x.keys[i].key {
 			x.keys[i+1] = x.keys[i]
 			i--
 		}
 		x.keys[i+1] = k
 		x.n++
 	} else {
-		for i >= 0 && k < x.keys[i] {
+		for i >= 0 && k.key < x.keys[i].key {
 			i--
 		}
 		i++
 		if x.children[i].n == 2*bt.t-1 {
 			bt.splitChild(x, i)
-			if k > x.keys[i] {
+			if k.key > x.keys[i].key {
 				i++
 			}
 		}
@@ -155,11 +155,11 @@ func (bt *BTree) Delete(k int) {
 func (bt *BTree) delete(x *BTreeNode, k int) {
 	t := bt.t
 	i := 0
-	for i < x.n && k > x.keys[i] {
+	for i < x.n && k > x.keys[i].key {
 		i++
 	}
 
-	if i < x.n && k == x.keys[i] {
+	if i < x.n && k == x.keys[i].key {
 		// La clave está en el nodo x
 		if x.leaf {
 			// Caso 1: La clave está en un nodo hoja
@@ -175,7 +175,7 @@ func (bt *BTree) delete(x *BTreeNode, k int) {
 				}
 				predKey := pred.keys[pred.n-1]
 				x.keys[i] = predKey
-				bt.delete(x.children[i], predKey)
+				bt.delete(x.children[i], predKey.key)
 			} else if len(x.children[i+1].keys) >= t {
 				// Caso 2b: Sucesor tiene al menos t claves
 				succ := x.children[i+1]
@@ -184,7 +184,7 @@ func (bt *BTree) delete(x *BTreeNode, k int) {
 				}
 				succKey := succ.keys[0]
 				x.keys[i] = succKey
-				bt.delete(x.children[i+1], succKey)
+				bt.delete(x.children[i+1], succKey.key)
 			} else {
 				// Caso 2c: Ambos hijos tienen menos de t claves
 				bt.merge(x, i)
@@ -204,7 +204,7 @@ func (bt *BTree) delete(x *BTreeNode, k int) {
 	}
 }
 
-// Rellena el hijo x.children[i] si tiene menos de t claves
+// Fills child x.children[i] if has less than t keys
 func (bt *BTree) fill(x *BTreeNode, i int) {
 	t := bt.t
 	if i != 0 && len(x.children[i-1].keys) >= t {
@@ -220,7 +220,7 @@ func (bt *BTree) fill(x *BTreeNode, i int) {
 	}
 }
 
-// Toma prestado una clave del nodo x.children[i-1] y la inserta en x.children[i]
+// Borrows a key from node x.children[i-1] and includes it in x.children[i]
 func (bt *BTree) borrowFromPrev(x *BTreeNode, i int) {
 	child := x.children[i]
 	sibling := x.children[i-1]
@@ -243,7 +243,7 @@ func (bt *BTree) borrowFromPrev(x *BTreeNode, i int) {
 	sibling.n--
 }
 
-// Toma prestado una clave del nodo x.children[i+1] y la inserta en x.children[i]
+// Borrows a key from node x.children[i+1] and includes it in x.children[i]
 func (bt *BTree) borrowFromNext(x *BTreeNode, i int) {
 	child := x.children[i]
 	sibling := x.children[i+1]
@@ -265,7 +265,7 @@ func (bt *BTree) borrowFromNext(x *BTreeNode, i int) {
 	sibling.n--
 }
 
-// Fusiona x.children[i] y x.children[i+1]
+// Merges x.children[i] and x.children[i+1]
 func (bt *BTree) merge(x *BTreeNode, i int) {
 	child := x.children[i]
 	sibling := x.children[i+1]
@@ -291,6 +291,7 @@ func (bt *BTree) merge(x *BTreeNode, i int) {
 	x.n--
 }
 
+// Makes an InOrder Traversal of the whole tree
 func (bt *BTree) InOrderTraversal() {
 	if bt.root != nil {
 		inOrderTraversal(bt.root)
@@ -305,7 +306,7 @@ func inOrderTraversal(node *BTreeNode) {
 			inOrderTraversal(node.children[i])
 		}
 		// Imprimir la clave del nodo actual
-		val := ufmt.Sprintf("%d ", node.keys[i])
+		val := ufmt.Sprintf("%d ", node.keys[i].key)
 		ufmt.Println(val)
 		i++
 	}
@@ -316,47 +317,49 @@ func inOrderTraversal(node *BTreeNode) {
 	}
 }
 
-func (bt *BTree) GetSmallest() int {
+// Returns the record with the smallest key
+func (bt *BTree) GetSmallest() UserRecord {
 	if bt.root != nil {
 		return getSmallest(bt.root)
 	} else {
-		return 0
+		return UserRecord{}
 	}
 }
 
-func getSmallest(node *BTreeNode) int {
+func getSmallest(node *BTreeNode) UserRecord {
 	i := 0
-	var val int
+	var val UserRecord
 	if !node.leaf {
 		val = getSmallest(node.children[i])
 	} else {
 		if node.n > 0 {
 			val = node.keys[i]
 		} else {
-			val = -1
+			val = UserRecord{}
 		}
 	}
 	return val
 }
 
-func (bt *BTree) GetGreatest() int {
+// Returns the record with the greatest key
+func (bt *BTree) GetGreatest() UserRecord {
 	if bt.root != nil {
 		return getGreatest(bt.root)
 	} else {
-		return 0
+		return UserRecord{}
 	}
 }
 
-func getGreatest(node *BTreeNode) int {
+func getGreatest(node *BTreeNode) UserRecord {
 	i := node.n - 1
-	var val int
+	var val UserRecord
 	if !node.leaf {
 		val = getGreatest(node.children[i])
 	} else {
 		if node.n > 0 {
 			val = node.keys[i]
 		} else {
-			val = -1
+			val = UserRecord{}
 		}
 	}
 	return val
