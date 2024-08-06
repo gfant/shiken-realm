@@ -3,9 +3,8 @@ package shiken
 import (
 	"strconv"
 
-	avl "gno.land/p/demo/avl"
-
-	shiken_support "gno.land/p/dev/shiken_support"
+	leaderboard "gno.land/p/dev/shiken_leaderboards"
+	shiken_problems "gno.land/p/dev/shiken_problems"
 )
 
 func RenderScores(id int) string {
@@ -15,16 +14,16 @@ func RenderScores(id int) string {
 	if !ok {
 		panic(ErrNoProblemId)
 	}
-	lb := lbInterface.(*avl.Tree)
+	lb := lbInterface.(*leaderboard.BTree)
 	output := "{"
 	output += `"problem":` + RenderProblem(id) + ","
-	output += `"scores":` + shiken_support.ReadScores(lb)
+	output += `"scores":` + leaderboard.ReadScores(lb)
 	output += "}"
 	return output
 }
 
 func RenderProblems() string {
-	output := shiken_support.ReadProblems(Problems)
+	output := shiken_problems.ReadProblems(Problems)
 	return output
 }
 
@@ -34,7 +33,7 @@ func RenderProblem(problemId int) string {
 	if !ok {
 		panic(ErrNoProblemId)
 	}
-	problem := problemInterface.(*shiken_support.Problem)
+	problem := problemInterface.(*shiken_problems.Problem)
 	output := problem.ReadProblem()
 	return output
 }

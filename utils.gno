@@ -4,27 +4,27 @@ import (
 	"std"
 	"strconv"
 
-	btree "gno.land/p/dev/btree"
-	shiken_support "gno.land/p/dev/shiken_support"
+	leaderboard "gno.land/p/dev/shiken_leaderboards"
+	shiken_problems "gno.land/p/dev/shiken_problems"
 )
 
 // Adding new problem to the list
 func AddNewProblem(title, statement, examples string) {
 	caller := std.GetOrigCaller()
 	verifyDAO(caller)
-	newProblem := new(shiken_support.Problem)
+	newProblem := new(shiken_problems.Problem)
 	newProblem.FillProblem(title, statement, examples)
 	id := strconv.Itoa(ProblemId)
 	Problems.Set(id, newProblem)
 	// For later purposes
-	leaderboards.Set(id, btree.NewBTree(3))
+	leaderboards.Set(id, leaderboard.NewBTree(3))
 	ProblemId++
 }
 
 // Adding score of an user
 func AddNewScore(address std.Address, problemId, score int, tests string) {
 	// Generating score record
-	newScore := shiken_support.Score{}
+	newScore := leaderboard.Score{}
 	newScore.FillScore(address, problemId, score, tests)
 
 	// Getting the leaderboard for problem
@@ -33,7 +33,7 @@ func AddNewScore(address std.Address, problemId, score int, tests string) {
 	if !ok {
 		panic(ErrNoProblemId)
 	}
-	bTreeScores := bTreeInterface.(*btree.BTree)
+	bTreeScores := bTreeInterface.(*leaderboard.BTree)
 	// Generating id for score
 	scoreIntId := score*LeaderboardFactor + updaterCounter
 

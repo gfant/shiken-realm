@@ -4,7 +4,7 @@ import (
 	"std"
 	"strconv"
 
-	btree "gno.land/p/dev/btree"
+	leaderboard "gno.land/p/dev/shiken_leaderboards"
 )
 
 func verifyDAO(caller std.Address) bool {
@@ -20,7 +20,7 @@ func newBestScore(score, problemId int) bool {
 	if !ok {
 		panic(ErrNoProblemId)
 	}
-	tree := treeInterface.(*btree.BTree)
+	tree := treeInterface.(*leaderboard.BTree)
 	worst := tree.GetSmallest()
 	if worst.Key > score {
 		return true
