@@ -1,15 +1,16 @@
-package btree
+package shiken_leaderboards
 
 import (
+	"std"
+
 	ufmt "gno.land/p/demo/ufmt"
-	shiken_support "gno.land/p/dev/shiken_support"
 )
 
 type BTreeNode struct {
-	keys     []shiken_support.Score // keys in node
-	children []*BTreeNode           // pointers to children
-	leaf     bool                   // Node is leaf or not
-	n        int                    // amount of stored vals in node
+	keys     []Score      // keys in node
+	children []*BTreeNode // pointers to children
+	leaf     bool         // Node is leaf or not
+	n        int          // amount of stored vals in node
 }
 
 type BTree struct {
@@ -17,29 +18,20 @@ type BTree struct {
 	t    int // min grade
 }
 
-/*
-func main() {
-	tree := NewBTree(3)
-
-	tree.Insert(UserRecord{key: 3, address: "11000000023"})
-	tree.Insert(UserRecord{key: 15, address: "12kkkkkk3"})
-	tree.Insert(UserRecord{key: 10, address: "123"})
-	tree.Delete(10)
-	tree.Insert(UserRecord{key: 1, address: "1dsadsadsa"})
-	ufmt.Println(tree.Search(15).address)
-
-	tree.InOrderTraversal()
-	ufmt.Println(tree.GetSmallest().address)
-	ufmt.Println(tree.GetGreatest().address)
+type Score struct {
+	Key       int
+	Address   std.Address
+	ProblemId int
+	Score     int
+	Tests     string
 }
-*/
 
 // Create new B-tree
 func NewBTree(t int) *BTree {
 	return &BTree{
 		root: &BTreeNode{
-			keys:     make([]shiken_support.Score, 0), // Create empty array since it's just a new node
-			children: make([]*BTreeNode, 0),           // Create empty array since no node has been added yet
+			keys:     make([]Score, 0),      // Create empty array since it's just a new node
+			children: make([]*BTreeNode, 0), // Create empty array since no node has been added yet
 			leaf:     true,
 		},
 		t: t,
@@ -47,11 +39,11 @@ func NewBTree(t int) *BTree {
 }
 
 // Search in B-tree
-func (bt *BTree) Search(k int) shiken_support.Score {
+func (bt *BTree) Search(k int) Score {
 	return search(bt.root, k)
 }
 
-func search(bt *BTreeNode, k int) shiken_support.Score {
+func search(bt *BTreeNode, k int) Score {
 	i := 0
 	for i < bt.n && k > bt.keys[i].Key {
 		i++
@@ -59,7 +51,7 @@ func search(bt *BTreeNode, k int) shiken_support.Score {
 	if i < bt.n && k == bt.keys[i].Key {
 		return bt.keys[i]
 	} else if bt.leaf {
-		return shiken_support.Score{}
+		return Score{}
 	} else {
 		return search(bt.children[i], k)
 	}
@@ -69,7 +61,7 @@ func (bt *BTree) splitChild(x *BTreeNode, i int) {
 	t := bt.t
 	y := x.children[i]
 	z := &BTreeNode{
-		keys:     make([]shiken_support.Score, t-1),
+		keys:     make([]Score, t-1),
 		children: make([]*BTreeNode, 0),
 		leaf:     y.leaf,
 		n:        t - 1,
@@ -86,16 +78,16 @@ func (bt *BTree) splitChild(x *BTreeNode, i int) {
 	y.n = t - 1
 
 	x.children = append(x.children[:i+1], append([]*BTreeNode{z}, x.children[i+1:]...)...)
-	x.keys = append(x.keys[:i], append([]shiken_support.Score{y.keys[t-1]}, x.keys[i:]...)...)
+	x.keys = append(x.keys[:i], append([]Score{y.keys[t-1]}, x.keys[i:]...)...)
 	x.n++
 }
 
 // Insert new val
-func (bt *BTree) Insert(k shiken_support.Score) {
+func (bt *BTree) Insert(k Score) {
 	root := bt.root
 	if root.n == 2*bt.t-1 {
 		s := &BTreeNode{
-			keys:     make([]shiken_support.Score, 0),
+			keys:     make([]Score, 0),
 			children: make([]*BTreeNode, 0),
 			leaf:     false,
 		}
@@ -109,10 +101,10 @@ func (bt *BTree) Insert(k shiken_support.Score) {
 }
 
 // Insert if the node isn't full
-func (bt *BTree) insertNonFull(x *BTreeNode, k shiken_support.Score) {
+func (bt *BTree) insertNonFull(x *BTreeNode, k Score) {
 	i := x.n - 1
 	if x.leaf {
-		x.keys = append(x.keys, shiken_support.Score{Key: 0})
+		x.keys = append(x.keys, Score{Key: 0})
 		for i >= 0 && k.Key < x.keys[i].Key {
 			x.keys[i+1] = x.keys[i]
 			i--
@@ -315,49 +307,85 @@ func inOrderTraversal(node *BTreeNode) {
 }
 
 // Returns the record with the smallest key
-func (bt *BTree) GetSmallest() shiken_support.Score {
+func (bt *BTree) GetSmallest() Score {
 	if bt.root != nil {
 		return getSmallest(bt.root)
 	} else {
-		return shiken_support.Score{}
+		return Score{}
 	}
 }
 
-func getSmallest(node *BTreeNode) shiken_support.Score {
+func getSmallest(node *BTreeNode) Score {
 	i := 0
-	var val shiken_support.Score
+	var val Score
 	if !node.leaf {
 		val = getSmallest(node.children[i])
 	} else {
 		if node.n > 0 {
 			val = node.keys[i]
 		} else {
-			val = shiken_support.Score{}
+			val = Score{}
 		}
 	}
 	return val
 }
 
 // Returns the record with the greatest key
-func (bt *BTree) GetGreatest() shiken_support.Score {
+func (bt *BTree) GetGreatest() Score {
 	if bt.root != nil {
 		return getGreatest(bt.root)
 	} else {
-		return shiken_support.Score{}
+		return Score{}
 	}
 }
 
-func getGreatest(node *BTreeNode) shiken_support.Score {
+func getGreatest(node *BTreeNode) Score {
 	i := node.n - 1
-	var val shiken_support.Score
+	var val Score
 	if !node.leaf {
 		val = getGreatest(node.children[i])
 	} else {
 		if node.n > 0 {
 			val = node.keys[i]
 		} else {
-			val = shiken_support.Score{}
+			val = Score{}
 		}
 	}
 	return val
+}
+
+// Makes an InOrder Traversal of the whole tree
+func (bt *BTree) ValuesInOrder() string {
+	output := "{"
+	if bt.root != nil {
+		output += valuesInOrder(bt.root)
+	}
+	output += "}"
+	return output
+}
+
+func valuesInOrder(node *BTreeNode) string {
+	var prev string
+	var post string
+	var center string
+
+	i := 0
+	// Recorrer cada hijo y su subárbol izquierdo
+	for i < node.n {
+		if !node.leaf {
+			prev += valuesInOrder(node.children[i])
+		}
+		// Imprimir la clave del nodo actual
+		center += ufmt.Sprintf(`"%d":`, node.keys[i].Key)
+		val := node.keys[i].ReadScore()
+		center += val + "},"
+		i++
+	}
+	// Recorrer el subárbol derecho del último hijo
+	if !node.leaf {
+		post += valuesInOrder(node.children[i])
+	}
+
+	total := prev + center + post
+	return total
 }
