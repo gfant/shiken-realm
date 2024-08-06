@@ -1,4 +1,4 @@
-package shiken_support
+package shiken_problems
 
 import (
 	"strings"
