@@ -16,6 +16,7 @@ type BTreeNode struct {
 type BTree struct {
 	root *BTreeNode
 	t    int // min grade
+	size int
 }
 
 type Score struct {
@@ -61,24 +62,25 @@ func (bt *BTree) splitChild(x *BTreeNode, i int) {
 	t := bt.t
 	y := x.children[i]
 	z := &BTreeNode{
-		keys:     make([]Score, t-1),
-		children: make([]*BTreeNode, 0),
+		keys:     make([]Score, t-1),    // Remember keys are the Scores contained in this node
+		children: make([]*BTreeNode, 0), // And children are the other nodes
 		leaf:     y.leaf,
 		n:        t - 1,
 	}
 
 	// Copies the last (t-1) keys from y to z
-	copy(z.keys, y.keys[t:])
+	copy(z.keys, y.keys[1:])
 	if !y.leaf {
 		z.children = make([]*BTreeNode, t)
-		copy(z.children, y.children[t:])
+		copy(z.children, y.children[1:])
 	}
 
 	y.keys = y.keys[:t-1]
 	y.n = t - 1
 
 	x.children = append(x.children[:i+1], append([]*BTreeNode{z}, x.children[i+1:]...)...)
-	x.keys = append(x.keys[:i], append([]Score{y.keys[t-1]}, x.keys[i:]...)...)
+	// Has to be t-2 because y has t-1 keys, and is requesting the last
+	x.keys = append(x.keys[:i], append([]Score{y.keys[t-2]}, x.keys[i:]...)...)
 	x.n++
 }
 
@@ -98,6 +100,7 @@ func (bt *BTree) Insert(k Score) {
 	} else {
 		bt.insertNonFull(root, k)
 	}
+	bt.size++
 }
 
 // Insert if the node isn't full
@@ -139,6 +142,7 @@ func (bt *BTree) Delete(k int) {
 			bt.root = bt.root.children[0]
 		}
 	}
+	bt.size--
 }
 
 func (bt *BTree) delete(x *BTreeNode, k int) {
@@ -342,13 +346,17 @@ func (bt *BTree) GetGreatest() Score {
 func getGreatest(node *BTreeNode) Score {
 	i := node.n - 1
 	var val Score
+	if i < 1 {
+		val.AddKey(-1)
+		return val
+	}
 	if !node.leaf {
 		val = getGreatest(node.children[i])
 	} else {
 		if node.n > 0 {
 			val = node.keys[i]
 		} else {
-			val = Score{}
+			val.AddKey(-1)
 		}
 	}
 	return val
@@ -360,6 +368,7 @@ func (bt *BTree) ValuesInOrder() string {
 	if bt.root != nil {
 		output += valuesInOrder(bt.root)
 	}
+	output = output[:len(output)-1]
 	output += "}"
 	return output
 }
@@ -378,7 +387,7 @@ func valuesInOrder(node *BTreeNode) string {
 		// Imprimir la clave del nodo actual
 		center += ufmt.Sprintf(`"%d":`, node.keys[i].Key)
 		val := node.keys[i].ReadScore()
-		center += val + "},"
+		center += val + ","
 		i++
 	}
 	// Recorrer el subárbol derecho del último hijo
@@ -388,4 +397,8 @@ func valuesInOrder(node *BTreeNode) string {
 
 	total := prev + center + post
 	return total
+}
+
+func (bt *BTree) GetSize() int {
+	return bt.size
 }
