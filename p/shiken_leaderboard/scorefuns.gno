@@ -16,7 +16,7 @@ func (s *Score) FillScore(address std.Address, score, problemId int, tests strin
 	if tests != "" && len(s.Tests) != 0 {
 		s.Tests = tests
 	}
-	if address != "" && len(s.Address) != 0 {
+	if len(s.Address) == 0 {
 		s.Address = address
 	}
 }
