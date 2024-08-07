@@ -25,7 +25,7 @@ func AddNewProblem(title, statement, examples string) {
 func AddNewScore(address std.Address, problemId, score int, tests string) {
 	// Generating score record
 	newScore := leaderboard.Score{}
-	newScore.FillScore(address, problemId, score, tests)
+	newScore.FillScore(address, score, problemId, tests)
 
 	// Getting the leaderboard for problem
 	problemIdString := strconv.Itoa(problemId)
@@ -43,4 +43,5 @@ func AddNewScore(address std.Address, problemId, score int, tests string) {
 		bTreeScores.Insert(newScore)                   // Adding the score into the tree
 		leaderboards.Set(problemIdString, bTreeScores) // Returning the tree into the leaderboard avl.tree
 	}
+	updaterCounter++
 }
