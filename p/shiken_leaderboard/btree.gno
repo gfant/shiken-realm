@@ -58,30 +58,44 @@ func search(bt *BTreeNode, k int) Score {
 	}
 }
 
-func (bt *BTree) splitChild(x *BTreeNode, i int) {
-	t := bt.t
-	y := x.children[i]
-	z := &BTreeNode{
-		keys:     make([]Score, t-1),    // Remember keys are the Scores contained in this node
-		children: make([]*BTreeNode, 0), // And children are the other nodes
-		leaf:     y.leaf,
-		n:        t - 1,
+func (bt *BTree) splitChild(parent *BTreeNode, childIndex int) {
+	t := bt.t // Degree of btree
+
+	// Child node to be divided
+	oldChild := parent.children[childIndex]
+
+	// New node to hold remaining keys and children
+	newChild := &BTreeNode{
+		keys:     make([]Score, t-1),    // t-1 spaces to fill
+		children: make([]*BTreeNode, 0), // no children
+		leaf:     oldChild.leaf,         // since this node will inherit oldChild position, must be the sabe as previous
+		n:        t - 1,                 // len(keys)
 	}
 
-	// Copies the last (t-1) keys from y to z
-	copy(z.keys, y.keys[1:])
-	if !y.leaf {
-		z.children = make([]*BTreeNode, t)
-		copy(z.children, y.children[1:])
+	// Copies last (t-1) keys from oldChild to newChild
+	copy(newChild.keys, oldChild.keys[t:])
+
+	// If was a leaf, just copy the children too
+	if !oldChild.leaf {
+		newChild.children = make([]*BTreeNode, t) // But will require to update the number of children
+		copy(newChild.children, oldChild.children[t:])
 	}
 
-	y.keys = y.keys[:t-1]
-	y.n = t - 1
+	// Middle value that goes up
+	middle := oldChild.keys[t-1]
 
-	x.children = append(x.children[:i+1], append([]*BTreeNode{z}, x.children[i+1:]...)...)
-	// Has to be t-2 because y has t-1 keys, and is requesting the last
-	x.keys = append(x.keys[:i], append([]Score{y.keys[t-2]}, x.keys[i:]...)...)
-	x.n++
+	// Adjusting original node to hold only the first t-1 keys
+	oldChild.keys = oldChild.keys[:t-1]
+	oldChild.n = t - 1 // len(oldChild.keys) updated
+
+	// Inserting new node in the children array of parent
+	parent.children = append(parent.children[:childIndex+1], append([]*BTreeNode{newChild}, parent.children[childIndex+1:]...)...)
+
+	// Moving the central key of the original node into the parent
+	parent.keys = append(parent.keys[:childIndex], append([]Score{middle}, parent.keys[childIndex:]...)...)
+
+	// Updating parent size
+	parent.n++
 }
 
 // Insert new val
@@ -105,9 +119,9 @@ func (bt *BTree) Insert(k Score) {
 
 // Insert if the node isn't full
 func (bt *BTree) insertNonFull(x *BTreeNode, k Score) {
-	i := x.n - 1
+	i := x.n - 1 // Index for new item
 	if x.leaf {
-		x.keys = append(x.keys, Score{Key: 0})
+		x.keys = append(x.keys, Score{Key: 0}) // If it's leaf, just add the val in the end
 		for i >= 0 && k.Key < x.keys[i].Key {
 			x.keys[i+1] = x.keys[i]
 			i--
