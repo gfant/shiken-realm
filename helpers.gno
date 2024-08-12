@@ -23,13 +23,21 @@ func newBestScore(score, problemId int) bool {
 	tree := treeInterface.(*leaderboard.BTree)
 	if tree.GetSize() == 0 {
 		return true
-	}
-	worst := tree.GetSmallest()
-	if worst.Score > score || tree.GetSize() < 10000 {
-		return true
 	} else {
-		return false
+		// Getting the worst score is the element with the highest
+		// Score, so we get the greatest element
+		worstContent, err := tree.GetGreatest()
+		if err != nil {
+			panic(ErrNoProblemId)
+		}
+		worst := worstContent.Value.(*Score)
+		if worst.Score > score || tree.GetSize() < 10000 {
+			return true
+		} else {
+			return false
+		}
 	}
+	return true
 }
 
 func GetFastest(problemId int) int {
@@ -38,8 +46,15 @@ func GetFastest(problemId int) int {
 		panic(ErrNoProblemId)
 	}
 	tree := treeInterface.(*leaderboard.BTree)
-	b := tree.GetSmallest()
-	return b.Score
+	bContent, err := tree.GetSmallest()
+	if err != nil {
+		panic(ErrNoProblemId)
+	}
+	bScore := bContent.Value.(Score)
+	if err != nil {
+		panic(ErrNoProblemId)
+	}
+	return bScore.Score
 }
 
 func GetSlowest(problemId int) int {
@@ -48,6 +63,19 @@ func GetSlowest(problemId int) int {
 		panic(ErrNoProblemId)
 	}
 	tree := treeInterface.(*leaderboard.BTree)
-	s := tree.GetSmallest()
-	return s.Score
+	bContent, err := tree.GetSmallest()
+	bScore := bContent.Value.(Score)
+	if err != nil {
+		panic(ErrNoProblemId)
+	}
+	return bScore.Score
+}
+
+func GetScoreSize(problemId int) int {
+	treeInterface, ok := leaderboards.Get(strconv.Itoa(problemId))
+	if !ok {
+		panic(ErrNoProblemId)
+	}
+	tree := treeInterface.(*leaderboard.BTree)
+	return tree.GetSize()
 }

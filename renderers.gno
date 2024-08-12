@@ -17,7 +17,7 @@ func RenderScores(id int) string {
 	lb := lbInterface.(*leaderboard.BTree)
 	output := "{"
 	output += `"problem":` + RenderProblem(id) + ","
-	output += `"scores":[` + leaderboard.ReadScores(lb) + "]"
+	output += `"scores":[` + ReadScores(lb) + "]"
 	output += "}"
 	return output
 }

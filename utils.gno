@@ -16,16 +16,20 @@ func AddNewProblem(title, statement, examples string) {
 	newProblem.FillProblem(title, statement, examples)
 	id := strconv.Itoa(ProblemId)
 	Problems.Set(id, newProblem)
-	// For later purposes
-	leaderboards.Set(id, leaderboard.NewBTree(3))
+	newTree, err := leaderboard.NewBTree(2)
+	if err != nil {
+		panic(err)
+	}
+	leaderboards.Set(id, newTree)
 	ProblemId++
 }
 
 // Adding score of an user
 func AddNewScore(address std.Address, problemId, score int, tests string) {
 	// Generating score record
-	newScore := leaderboard.Score{}
+	newScore := Score{}
 	newScore.FillScore(address, score, problemId, tests)
+	newContent := leaderboard.Content{Value: &newScore}
 
 	// Getting the leaderboard for problem
 	problemIdString := strconv.Itoa(problemId)
@@ -39,8 +43,8 @@ func AddNewScore(address std.Address, problemId, score int, tests string) {
 
 	// Setting the score only if it's better than the worst score
 	if newBestScore(scoreIntId, problemId) {
-		newScore.AddKey(scoreIntId)                    // Adding key to order in the tree
-		bTreeScores.Insert(newScore)                   // Adding the score into the tree
+		newContent.AddKey(scoreIntId)                  // Adding key to order in the tree
+		bTreeScores.Insert(newContent)                 // Adding the score into the tree
 		leaderboards.Set(problemIdString, bTreeScores) // Returning the tree into the leaderboard avl.tree
 	}
 	updaterCounter++
