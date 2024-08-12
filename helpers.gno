@@ -50,7 +50,7 @@ func GetFastest(problemId int) int {
 	if err != nil {
 		panic(ErrNoProblemId)
 	}
-	bScore := bContent.Value.(Score)
+	bScore := bContent.Value.(*Score)
 	if err != nil {
 		panic(ErrNoProblemId)
 	}
@@ -63,8 +63,8 @@ func GetSlowest(problemId int) int {
 		panic(ErrNoProblemId)
 	}
 	tree := treeInterface.(*leaderboard.BTree)
-	bContent, err := tree.GetSmallest()
-	bScore := bContent.Value.(Score)
+	bContent, err := tree.GetGreatest()
+	bScore := bContent.Value.(*Score)
 	if err != nil {
 		panic(ErrNoProblemId)
 	}
