@@ -22,7 +22,7 @@ const (
 	ErrNoProblemId    = "No problem with given Id"
 	ErrNotDAOMember   = "This address is not from a DAO member"
 	ErrNotDAOSize     = "This list doesn't have enough members for the new DAO"
-	LeaderboardFactor = 10_000_000_000_000_000
+	LeaderboardFactor = 10_000_000_000
 )
 
 func init() {
