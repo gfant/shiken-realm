@@ -456,15 +456,16 @@ func valuesInOrder(node *BTreeNode) []interface{} {
 	for i < node.n {
 		// If it's not a leaf, we need to go deeper
 		if !node.leaf {
+			// Recursively add all the values from the left child
 			result = append(result, valuesInOrder(node.children[i])...)
 		}
-		// Append the key and move forward
-		value := node.keys[i].Value // node.leaderboard.Content.Value
 
+		// Append the key of the current node
+		value := node.keys[i].Value
 		result = append(result, value)
 		i++
 	}
-	// If it's not a leaf, we need to go deeper
+	// If it's not a leaf, we need to go deeper for the rightmost child
 	if !node.leaf {
 		result = append(result, valuesInOrder(node.children[i])...)
 	}
