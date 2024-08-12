@@ -49,3 +49,11 @@ func ReadScores(tree *leaderboard.BTree) string {
 	output = output[:len(output)-1] // Remove trailing comma
 	return output
 }
+
+func (s *Score) GetKey() int {
+	return s.Key
+}
+
+func (s *Score) GetScore() int {
+	return s.Score
+}
