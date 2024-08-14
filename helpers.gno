@@ -15,6 +15,7 @@ func verifyDAO(caller std.Address) bool {
 	return true
 }
 
+// New score worth to be added in the leaderboard
 func newBestScore(score, problemId int) bool {
 	treeInterface, ok := leaderboards.Get(strconv.Itoa(problemId))
 	if !ok {
