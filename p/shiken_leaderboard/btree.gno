@@ -384,8 +384,12 @@ func (bt *BTree) GetSize() int {
 	return bt.size
 }
 
+func (bt *BTree) IsEmpty() bool {
+	return bt.GetSize() == 0
+}
+
 // Returns the record with the smallest key
-func (bt *BTree) GetSmallest() (Content, error) {
+func (bt *BTree) GetSmallestKey() (Content, error) {
 	// Avoid case of a initialized tree with zero nodes
 	if bt.root != nil && bt.GetSize() != 0 {
 		return getSmallest(bt.root), nil
@@ -412,9 +416,9 @@ func getSmallest(node *BTreeNode) Content {
 }
 
 // Returns the record with the greatest key
-func (bt *BTree) GetGreatest() (Content, error) {
+func (bt *BTree) GetGreatestKey() (Content, error) {
 	// Case of an empty tree
-	if bt.root != nil && bt.GetSize() != 0 {
+	if bt.root != nil && !bt.IsEmpty() {
 		return getGreatest(bt.root), nil
 	} else {
 		// Return an error if the tree is empty

@@ -7,7 +7,7 @@ import (
 	leaderboard "gno.land/p/dev/shiken_leaderboards"
 )
 
-func verifyDAO(caller std.Address) bool {
+func verifyAddressBelongsToDAO(caller std.Address) bool {
 	_, ok := DAO.Get(caller.String())
 	if !ok {
 		panic(ErrNotDAOMember)
@@ -16,38 +16,22 @@ func verifyDAO(caller std.Address) bool {
 }
 
 // New score worth to be added in the leaderboard
-func newBestScore(score, problemId int) bool {
-	treeInterface, ok := leaderboards.Get(strconv.Itoa(problemId))
-	if !ok {
-		panic(ErrNoProblemId)
-	}
-	tree := treeInterface.(*leaderboard.BTree)
-	if tree.GetSize() == 0 {
+func validateTreeShouldAddScore(score, problemId int) bool {
+	tree := getTreeById(problemId)
+	if tree.IsEmpty() {
 		return true
-	} else {
-		// Getting the worst score is the element with the highest
-		// Score, so we get the greatest element
-		worstContent, err := tree.GetGreatest()
-		if err != nil {
-			panic(ErrNoProblemId)
-		}
-		worst := worstContent.Value.(*Score)
-		if worst.Score > score || tree.GetSize() < 10000 {
-			return true
-		} else {
-			return false
-		}
 	}
-	return true
+	worstScore := GetSlowestScore(problemId)
+	return worthToBeAdded(worstScore, score, tree)
 }
 
-func GetFastest(problemId int) int {
-	treeInterface, ok := leaderboards.Get(strconv.Itoa(problemId))
-	if !ok {
-		panic(ErrNoProblemId)
-	}
-	tree := treeInterface.(*leaderboard.BTree)
-	bContent, err := tree.GetSmallest()
+func worthToBeAdded(worstScore, score int, tree *leaderboard.BTree) bool {
+	return worstScore > score || tree.GetSize() < 10000
+}
+
+func GetFastestScore(problemId int) int {
+	tree := getTreeById(problemId)
+	bContent, err := tree.GetSmallestKey()
 	if err != nil {
 		panic(ErrNoProblemId)
 	}
@@ -58,25 +42,24 @@ func GetFastest(problemId int) int {
 	return bScore.Score
 }
 
-func GetSlowest(problemId int) int {
-	treeInterface, ok := leaderboards.Get(strconv.Itoa(problemId))
-	if !ok {
-		panic(ErrNoProblemId)
-	}
-	tree := treeInterface.(*leaderboard.BTree)
-	bContent, err := tree.GetGreatest()
-	bScore := bContent.Value.(*Score)
+func GetSlowestScore(problemId int) int {
+	tree := getTreeById(problemId)
+	scoreInterface, err := tree.GetGreatestKey()
+	scoreStruct := scoreInterface.Value.(*Score)
 	if err != nil {
 		panic(ErrNoProblemId)
 	}
-	return bScore.Score
+	return scoreStruct.Score
 }
 
-func GetScoreSize(problemId int) int {
-	treeInterface, ok := leaderboards.Get(strconv.Itoa(problemId))
+func getTreeById(problemId int) *leaderboard.BTree {
+	treeInterface, ok := leaderboardsKeyToScore.Get(strconv.Itoa(problemId))
 	if !ok {
 		panic(ErrNoProblemId)
 	}
-	tree := treeInterface.(*leaderboard.BTree)
-	return tree.GetSize()
+	return treeInterface.(*leaderboard.BTree)
+}
+
+func StringProblemId() string {
+	return strconv.Itoa(ProblemId)
 }

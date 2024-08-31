@@ -13,7 +13,7 @@ type Problem struct {
 	Examples  []string
 }
 
-func (p *Problem) FillProblem(title, statement, examples string) {
+func (p *Problem) InputInformation(title, statement, examples string) {
 	if title != "" {
 		p.Title = title
 	}

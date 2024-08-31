@@ -10,7 +10,7 @@ import (
 func RenderScores(id int) string {
 	idString := strconv.Itoa(id)
 	// Tree{problemId -> Tree{Address -> score}}
-	lbInterface, ok := leaderboards.Get(idString)
+	lbInterface, ok := leaderboardsKeyToScore.Get(idString)
 	if !ok {
 		panic(ErrNoProblemId)
 	}

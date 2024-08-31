@@ -16,7 +16,7 @@ type Score struct {
 	Tests     string
 }
 
-func (s *Score) FillScore(address std.Address, score, problemId int, tests string) {
+func (s *Score) InputInformation(address std.Address, score, problemId int, tests string) {
 	// These entries are only updated if the data hasn't been edited before
 	if problemId != 0 && s.ProblemId == 0 {
 		s.ProblemId = problemId

@@ -7,15 +7,15 @@ import (
 )
 
 var (
-	Problems             avl.Tree    // Id -> Problem
-	leaderboards         avl.Tree    // Id -> Btree{Key -> ScoreData}
-	invertedLeaderboards avl.Tree    // Id -> Avl.Tree{Address -> Score}
-	updaterCounter       int         // Counter to update the attempts in leaderboards
-	Account              avl.Tree    // Address -> Data
-	owner                std.Address // Creator of realm
-	ProblemId            int         // Counter for problems so can be registered in an avl.Tree
-	DAO                  avl.Tree    // List of addresses that conform those that can edit everything here
-	DAOsize              int         // This value must be set in the beginning of the ream
+	Problems                 avl.Tree    // Id -> Problem
+	leaderboardsKeyToScore   avl.Tree    // Id -> Btree{Key -> ScoreData}
+	leaderboardsAddressToKey avl.Tree    // Id -> Avl.Tree{Address -> Score}
+	scoreCounter             int         // Contabilize the number of score attempts
+	Account                  avl.Tree    // Address -> Data
+	owner                    std.Address // Creator of realm
+	ProblemId                int         // Counter for problems so can be registered in an avl.Tree
+	DAO                      avl.Tree    // List of addresses that conform those that can edit everything here
+	DAOsize                  int         // This value must be set in the beginning of the ream
 )
 
 const (
