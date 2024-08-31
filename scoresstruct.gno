@@ -47,10 +47,7 @@ func setAddress(s *Score, address std.Address) {
 
 func (s *Score) ReadScore() string {
 	var output string
-	output += ufmt.Sprintf(`
-	{"Address": "%s",
-	 "Score"  : "%d",
-	 "Tests" : "%s"}`, s.Address, s.Score, s.Tests)
+	output += ufmt.Sprintf(`{"Address": "%s","Score"  : "%d","Tests" : "%s"}`, s.Address, s.Score, s.Tests)
 	return output
 }
 
