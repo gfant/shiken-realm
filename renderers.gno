@@ -1,23 +1,20 @@
 package shiken
 
 import (
-	"strconv"
-
 	leaderboard "gno.land/p/dev/shiken_leaderboards"
 	shiken_problems "gno.land/p/dev/shiken_problems"
 )
 
 func RenderScores(id int) string {
-	idString := strconv.Itoa(id)
 	// Tree{problemId -> Tree{Address -> score}}
-	lbInterface, ok := leaderboardsKeyToScore.Get(idString)
+	lbInterface, ok := leaderboardsKeyToScore.Get(getStringFromInt(id))
 	if !ok {
 		panic(ErrNoProblemId)
 	}
 	lb := lbInterface.(*leaderboard.BTree)
 	output := "{"
 	output += `"problem":` + RenderProblem(id) + ","
-	output += `"scores":[` + ReadScores(lb) + "]"
+	output += `"scores":[` + readScores(lb) + "]"
 	output += "}"
 	return output
 }
@@ -28,7 +25,7 @@ func RenderProblems() string {
 }
 
 func RenderProblem(problemId int) string {
-	idString := strconv.Itoa(problemId)
+	idString := getStringFromInt(problemId)
 	problemInterface, ok := Problems.Get(idString)
 	if !ok {
 		panic(ErrNoProblemId)

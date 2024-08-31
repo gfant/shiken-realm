@@ -15,43 +15,6 @@ func verifyAddressBelongsToDAO(caller std.Address) bool {
 	return true
 }
 
-// New score worth to be added in the leaderboard
-func validateTreeShouldAddScore(score, problemId int) bool {
-	tree := getTreeById(problemId)
-	if tree.IsEmpty() {
-		return true
-	}
-	worstScore := GetSlowestScore(problemId)
-	return worthToBeAdded(worstScore, score, tree)
-}
-
-func worthToBeAdded(worstScore, score int, tree *leaderboard.BTree) bool {
-	return worstScore > score || tree.GetSize() < 10000
-}
-
-func GetFastestScore(problemId int) int {
-	tree := getTreeById(problemId)
-	bContent, err := tree.GetSmallestKey()
-	if err != nil {
-		panic(ErrNoProblemId)
-	}
-	bScore := bContent.Value.(*Score)
-	if err != nil {
-		panic(ErrNoProblemId)
-	}
-	return bScore.Score
-}
-
-func GetSlowestScore(problemId int) int {
-	tree := getTreeById(problemId)
-	scoreInterface, err := tree.GetGreatestKey()
-	scoreStruct := scoreInterface.Value.(*Score)
-	if err != nil {
-		panic(ErrNoProblemId)
-	}
-	return scoreStruct.Score
-}
-
 func getTreeById(problemId int) *leaderboard.BTree {
 	treeInterface, ok := leaderboardsKeyToScore.Get(strconv.Itoa(problemId))
 	if !ok {
@@ -60,6 +23,22 @@ func getTreeById(problemId int) *leaderboard.BTree {
 	return treeInterface.(*leaderboard.BTree)
 }
 
-func StringProblemId() string {
+func getStringProblemId() string {
 	return strconv.Itoa(ProblemId)
+}
+
+func getStringFromInt(value int) string {
+	return strconv.Itoa(value)
+}
+
+func breakIfNotOk(ok bool, msg string) {
+	if !ok {
+		panic(msg)
+	}
+}
+
+func breakIfError(err error, msg string) {
+	if err != nil {
+		panic(msg)
+	}
 }
