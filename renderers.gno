@@ -27,10 +27,13 @@ func RenderProblems() string {
 func RenderProblem(problemId int) string {
 	idString := getStringFromInt(problemId)
 	problemInterface, ok := Problems.Get(idString)
-	if !ok {
-		panic(ErrNoProblemId)
-	}
+	breakIfNotOk(ok, ErrNoProblemId)
 	problem := problemInterface.(*shiken_problems.Problem)
 	output := problem.ReadProblem()
+	return output
+}
+
+func RenderUser(address string) string {
+	output := renderUserRegister(address)
 	return output
 }

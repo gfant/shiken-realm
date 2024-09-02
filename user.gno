@@ -85,8 +85,9 @@ func updateTotalAttempts(user *UserRegister) {
 	user.TotalAttempts++
 }
 
-func renderUserRegister(user *UserRegister) string {
+func renderUserRegister(address string) string {
 	var output string
+	user := getUserRegister(address)
 	output += ufmt.Sprintf(`{"Address": "%s","ProblemsSolved"  : "%d","Attempts" : "%d"}`, getAddress(user), "", getAttempts(user))
 	return output
 }
