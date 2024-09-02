@@ -16,10 +16,24 @@ const (
 )
 
 func AddNewScore(address std.Address, problemId, score int, tests string) {
+	createNewAttemptByUser(address, problemId, score)
 	if validateTreeShouldAddScore(score, problemId) && compareNewScoreIsBetterThanOld(address, score, problemId) {
 		updateLeaderboardsAndAddressRegister(address, problemId, score, tests)
 	}
 	updateScoreCounter()
+}
+
+func validateTreeShouldAddScore(score, problemId int) bool {
+	tree := getProblemScoreTreeById(problemId)
+	if tree.IsEmpty() {
+		return true
+	}
+	worstScore := GetSlowestScore(problemId)
+	return worthToBeAdded(worstScore, score, tree)
+}
+
+func worthToBeAdded(worstScore, score int, tree *leaderboard.BTree) bool {
+	return worstScore > score || tree.GetSize() < 10000
 }
 
 func updateLeaderboardsAndAddressRegister(address std.Address, problemId, newScore int, tests string) {
@@ -27,6 +41,24 @@ func updateLeaderboardsAndAddressRegister(address std.Address, problemId, newSco
 	newScoreRecord := generateRecordForLeaderboard(address, newScore, scoreId, problemId, tests)
 	updateLeaderboard(problemId, newScoreRecord)
 	registerScoreIdToAddress(address, scoreId, problemId)
+}
+
+func generateScoreId(score int) int {
+	return score*LeaderboardFactor + scoreCounter
+}
+
+func generateRecordForLeaderboard(address std.Address, score, scoreId, problemId int, tests string) leaderboard.Content {
+	scoreStruct := generateNewScore(address, score, scoreId, problemId, tests)
+	newContent := leaderboard.Content{Value: &scoreStruct}
+	newContent.AddKey(scoreStruct.Key)
+	return newContent
+}
+
+func updateLeaderboard(problemId int, nodeForLeaderboard leaderboard.Content) {
+	bTreeScores := getLeaderboard(problemId)
+	bTreeScores.Insert(nodeForLeaderboard)
+	problemIdString := getStringFromInt(problemId)
+	leaderboardsKeyToScore.Set(problemIdString, bTreeScores)
 }
 
 func registerScoreIdToAddress(address std.Address, newId, problemId int) {
@@ -42,11 +74,21 @@ func previousScoreExists(address std.Address, avlTree *avl.Tree) bool {
 	return ok
 }
 
-func updateLeaderboard(problemId int, nodeForLeaderboard leaderboard.Content) {
-	bTreeScores := getLeaderboard(problemId)
-	bTreeScores.Insert(nodeForLeaderboard)
-	problemIdString := getStringProblemId()
-	leaderboardsKeyToScore.Set(problemIdString, bTreeScores)
+func removePositionFromLeaderboard(address std.Address, problemId int, leaderboardTree *avl.Tree) {
+	leaderboardTree.Remove(address.String())
+	leaderboardsAddressToKey.Set(getStringFromInt(problemId), leaderboardTree)
+}
+
+func updateIdForAddress(address std.Address, problemId, newId int, avlTree *avl.Tree) {
+	avlTree.Set(address.String(), newId)
+	leaderboardsAddressToKey.Set(getStringFromInt(problemId), avlTree)
+}
+
+func generateNewScore(address std.Address, score, scoreId, problemId int, tests string) Score {
+	newScore := Score{}
+	newScore.Key = scoreId
+	newScore.InputInformation(address, score, problemId, tests)
+	return newScore
 }
 
 func updateScoreCounter() {
@@ -77,27 +119,8 @@ func getLeaderboard(problemId int) *leaderboard.BTree {
 	return bTree
 }
 
-func removePositionFromLeaderboard(address std.Address, problemId int, leaderboardTree *avl.Tree) {
-	leaderboardTree.Remove(address.String())
-	leaderboardsAddressToKey.Set(getStringFromInt(problemId), leaderboardTree)
-}
-
-// New score worth to be added in the leaderboard
-func validateTreeShouldAddScore(score, problemId int) bool {
-	tree := getTreeById(problemId)
-	if tree.IsEmpty() {
-		return true
-	}
-	worstScore := GetSlowestScore(problemId)
-	return worthToBeAdded(worstScore, score, tree)
-}
-
-func worthToBeAdded(worstScore, score int, tree *leaderboard.BTree) bool {
-	return worstScore > score || tree.GetSize() < 10000
-}
-
 func GetFastestScore(problemId int) int {
-	tree := getTreeById(problemId)
+	tree := getProblemScoreTreeById(problemId)
 	bContent, err := tree.GetSmallestKey()
 	breakIfError(err, ErrLeaderboardEmptyOrNotExistent)
 	bScore := bContent.Value.(*Score)
@@ -105,16 +128,11 @@ func GetFastestScore(problemId int) int {
 }
 
 func GetSlowestScore(problemId int) int {
-	tree := getTreeById(problemId)
+	tree := getProblemScoreTreeById(problemId)
 	scoreInterface, err := tree.GetGreatestKey()
 	breakIfError(err, ErrLeaderboardEmptyOrNotExistent)
 	scoreStruct := scoreInterface.Value.(*Score)
 	return scoreStruct.Score
-}
-
-func updateIdForAddress(address std.Address, problemId, newId int, avlTree *avl.Tree) {
-	avlTree.Set(address.String(), newId)
-	leaderboardsAddressToKey.Set(getStringFromInt(problemId), avlTree)
 }
 
 func getInvertedLeaderboard(problemId int) *avl.Tree {
@@ -136,24 +154,6 @@ func getAddressPosition(address std.Address, problemId int) int {
 func addressPreviousScoreExists(address std.Address, problemId int) bool {
 	position := getAddressPosition(address, problemId)
 	return position != -1
-}
-
-func generateNewScore(address std.Address, score, scoreId, problemId int, tests string) Score {
-	newScore := Score{}
-	newScore.Key = scoreId
-	newScore.InputInformation(address, score, problemId, tests)
-	return newScore
-}
-
-func generateRecordForLeaderboard(address std.Address, score, scoreId, problemId int, tests string) leaderboard.Content {
-	scoreStruct := generateNewScore(address, score, scoreId, problemId, tests)
-	newContent := leaderboard.Content{Value: &scoreStruct}
-	newContent.AddKey(scoreStruct.Key)
-	return newContent
-}
-
-func generateScoreId(score int) int {
-	return score*LeaderboardFactor + scoreCounter
 }
 
 func readScores(tree *leaderboard.BTree) string {
