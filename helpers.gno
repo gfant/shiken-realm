@@ -9,17 +9,19 @@ import (
 
 func verifyAddressBelongsToDAO(caller std.Address) bool {
 	_, ok := DAO.Get(caller.String())
-	if !ok {
-		panic(ErrNotDAOMember)
-	}
+	breakIfNotOk(ok, ErrNotDAOMember)
 	return true
 }
 
-func getTreeById(problemId int) *leaderboard.BTree {
-	treeInterface, ok := leaderboardsKeyToScore.Get(strconv.Itoa(problemId))
-	if !ok {
-		panic(ErrNoProblemId)
-	}
+func getProblemScoreTreeById(problemId int) *leaderboard.BTree {
+	treeInterface, ok := leaderboardsKeyToScore.Get(getStringFromInt(problemId))
+	breakIfNotOk(ok, ErrNoProblemId)
+	return treeInterface.(*leaderboard.BTree)
+}
+
+func getProblemById(problemId int) *leaderboard.BTree {
+	treeInterface, ok := Problems.Get(getStringFromInt(problemId))
+	breakIfNotOk(ok, ErrNoProblemId)
 	return treeInterface.(*leaderboard.BTree)
 }
 
@@ -41,4 +43,12 @@ func breakIfError(err error, msg string) {
 	if err != nil {
 		panic(msg)
 	}
+}
+
+func stringNotEmpty(value string) bool {
+	return len(value) != 0
+}
+
+func intNotZero(value int) bool {
+	return value != 0
 }
